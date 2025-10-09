@@ -1,0 +1,1 @@
+// Given an array as an parameter of a function returns the (sum of all the numbers which are perfect numbers)

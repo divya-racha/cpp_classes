@@ -1,0 +1,2 @@
+// Write a function that takes array and an integer X as in input and returns the first occurance index from the array
+// example : where array = {100, 200, 2, 3, 2, 1} and X = 2 (results should give as 2)
