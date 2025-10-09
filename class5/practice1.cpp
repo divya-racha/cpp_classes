@@ -1,0 +1,1 @@
+// Define a class called Electronic and initialize a object using that class ,initialized class should be from your household and add some methods to it!
