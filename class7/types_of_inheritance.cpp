@@ -1,0 +1,1 @@
+// Read on types of inheritance in programming and write examples for each with proper comments
