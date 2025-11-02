@@ -39,4 +39,12 @@ int main() {
   amraths_vehicle.PrintAllDetails();
 
   amraths_vehicle.StartTheVehicle();
+
+  Vehicle divyas_vehicle;
+  divyas_vehicle.brand_name = "bugati";
+  divyas_vehicle.name = "x16";
+  divyas_vehicle.color = "orange";
+  divyas_vehicle.is_insured = false;
+  divyas_vehicle.pending_fine = 0;
+  divyas_vehicle.top_speed = 200;
 }
