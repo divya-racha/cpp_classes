@@ -1,77 +1,238 @@
-/*
-Problem Statement: "Student Management System – Handling Dynamic Grades"
-Scenario:
+#include <iostream>
+#include <string>
+#include <algorithm> // For std::copy
 
-You are designing a simple Student Management System for a university. Each student has a name, roll number, and a dynamically allocated list of grades. You need to build a Student class that properly manages its data using constructors, destructors, and operator overloading.
+class Student {
+private:
+    std::string name;
+    int rollNumber;
+    float* grades; // Pointer to dynamically allocated array
+    int numGrades;
+    static int activeStudents; // Bonus: Static counter
 
-Requirements:
-1. Data Members (Encapsulation)
+    // Helper function for deep copy logic
+    void deepCopy(const Student& other) {
+        // 1. Copy simple members
+        name = other.name;
+        rollNumber = other.rollNumber;
+        numGrades = other.numGrades;
 
-All data members should be private:
+        // 2. Allocate new memory for grades
+        if (numGrades > 0) {
+            grades = new float[numGrades];
+            // 3. Copy grade values
+            std::copy(other.grades, other.grades + numGrades, grades);
+        } else {
+            grades = nullptr;
+        }
+    }
 
-string name – name of the student.
+    // Helper function for cleanup
+    void cleanup() {
+        if (grades != nullptr) {
+            delete[] grades;
+            grades = nullptr;
+        }
+    }
 
-int rollNumber – unique roll number.
+public:
+    // --- 1. Static Member Initialization ---
+    // (Must be defined outside the class scope)
+    static int getActiveStudents() {
+        return activeStudents;
+    }
 
-float* grades – pointer to a dynamically allocated array of grades.
+    // --- 2. Constructors ---
 
-int numGrades – number of grades.
+    // Default Constructor
+    Student() : name("Unknown"), rollNumber(0), grades(nullptr), numGrades(0) {
+        activeStudents++;
+        // std::cout << "Default constructor called. Active students: " << activeStudents << std::endl;
+    }
 
-2. Constructors
+    // Parameterized Constructor
+    Student(const std::string& n, int roll, const float g[], int num)
+        : name(n), rollNumber(roll), numGrades(num) {
+        activeStudents++;
+        if (num > 0) {
+            grades = new float[numGrades];
+            std::copy(g, g + num, grades);
+        } else {
+            grades = nullptr;
+        }
+        // std::cout << "Parameterized constructor called for " << name << ". Active students: " << activeStudents << std::endl;
+    }
 
-Implement the following constructors:
+    // Copy Constructor (Deep Copy)
+    Student(const Student& other) {
+        deepCopy(other);
+        activeStudents++;
+        // std::cout << "Copy constructor called for " << name << ". Active students: " << activeStudents << std::endl;
+    }
 
-Default constructor – initializes name to "Unknown", rollNumber to 0, and sets grades to nullptr.
+    // --- 3. Destructor ---
+    ~Student() {
+        cleanup();
+        activeStudents--;
+        // std::cout << "Destructor called for " << name << ". Active students: " << activeStudents << std::endl;
+    }
 
-Parameterized constructor – takes name, roll number, and an array of grades as arguments.
+    // --- 4. Copy Assignment Operator (operator=) ---
+    Student& operator=(const Student& other) {
+        if (this != &other) { // Self-assignment check
+            cleanup();       // 1. Delete old memory
+            deepCopy(other); // 2. Perform deep copy
+        }
+        return *this; // 3. Return a reference to the current object
+    }
 
-Copy constructor – creates a deep copy of another Student object.
+    // --- 5. Operator Overloading ---
 
-(Optional) Constructor with default parameter values (e.g., default number of grades = 3).
+    // operator+ : Combines grades by calculating the average of all grades
+    Student operator+(const Student& other) const {
+        // Create a temporary array to hold all combined grades
+        int totalNumGrades = numGrades + other.numGrades;
+        float* combinedGrades = new float[totalNumGrades];
 
-3. Destructor
+        // Copy grades from *this
+        std::copy(grades, grades + numGrades, combinedGrades);
+        // Copy grades from other
+        std::copy(other.grades, other.grades + other.numGrades, combinedGrades + numGrades);
 
-Properly deallocate the dynamically allocated memory (grades) to prevent memory leaks.
+        // Create a new Student object using the combined data
+        // For simplicity, we use the first student's name/roll for the new combined student
+        Student result(name + "&" + other.name, rollNumber, combinedGrades, totalNumGrades);
 
-4. Copy Assignment Operator (operator=)
+        delete[] combinedGrades; // Clean up temporary array
 
-Overload the assignment operator to ensure deep copy behavior when assigning one Student object to another.
+        // Bonus: Calculate average of combined student
+        float totalSum = 0.0f;
+        for (int i = 0; i < result.numGrades; ++i) {
+            totalSum += result.grades[i];
+        }
+        float combinedAverage = totalSum / totalNumGrades;
+        
+        // This is a simple approach. A more complex requirement might be to average the averages.
+        // For this implementation, we simply combine the lists.
 
-5. Operator Overloading
+        return result;
+    }
 
-Implement the following operator overloads:
+    // --- 6. Getters and Setters ---
 
-operator+ – add two Student objects by combining their grades (average the grades if needed).
+    // Getters
+    std::string getName() const { return name; }
+    int getRollNumber() const { return rollNumber; }
+    int getNumGrades() const { return numGrades; }
+    float* getGrades() const { return grades; } // Careful: returns raw pointer
 
-operator<< – overload the << operator to print student details (name, roll number, grades).
+    // Setters
+    void setName(const std::string& n) { name = n; }
+    void setRollNumber(int roll) { rollNumber = roll; }
 
-6. Getters and Setters
+    void setGrades(const float g[], int num) {
+        if (num < 0) return;
 
-Provide getter and setter methods for each private member:
+        cleanup(); // Clean up existing memory
 
-setName(string) / getName()
+        numGrades = num;
+        if (numGrades > 0) {
+            grades = new float[numGrades];
+            std::copy(g, g + num, grades);
+        } else {
+            grades = nullptr;
+        }
+    }
 
-setRollNumber(int) / getRollNumber()
+    // --- Bonus Method ---
+    float calculateAverage() const {
+        if (numGrades == 0) return 0.0f;
+        float sum = 0.0f;
+        for (int i = 0; i < numGrades; ++i) {
+            sum += grades[i];
+        }
+        return sum / numGrades;
+    }
 
-setGrades(float[], int) / getGrades()
+    // Friend declaration for operator<<
+    friend std::ostream& operator<<(std::ostream& os, const Student& s);
+};
 
-7. Main Function Requirements
+// Global definition for the static member
+int Student::activeStudents = 0;
 
-In main(), demonstrate:
+// operator<< Overload (Friend function)
+std::ostream& operator<<(std::ostream& os, const Student& s) {
+    os << "\n--- Student Details ---" << std::endl;
+    os << "  Name: " << s.name << std::endl;
+    os << "  Roll No: " << s.rollNumber << std::endl;
+    os << "  Avg Grade: " << s.calculateAverage() << std::endl;
+    os << "  Grades (" << s.numGrades << "): [";
+    for (int i = 0; i < s.numGrades; ++i) {
+        os << s.grades[i] << (i < s.numGrades - 1 ? ", " : "");
+    }
+    os << "]" << std::endl;
+    os << "-----------------------";
+    return os;
+}
 
-Creating Student objects using all constructors.
+// --- 7. Main Function Demonstrating Requirements ---
+int main() {
+    std::cout << "Starting Student Management System Demo..." << std::endl;
+    std::cout << "Active students before creation: " << Student::getActiveStudents() << "\n" << std::endl;
 
-Modifying student details using setters.
+    // 1. Creating Student objects using constructors
+    
+    // Default constructor
+    Student s1; 
+    s1.setName("Alice");
+    s1.setRollNumber(101);
+    float g1[] = {90.5f, 85.0f, 92.5f};
+    s1.setGrades(g1, 3);
 
-Copying students using the copy constructor and assignment operator.
+    // Parameterized constructor
+    float g2[] = {78.0f, 88.0f, 75.0f, 82.0f};
+    Student s2("Bob", 102, g2, 4);
 
-Displaying student data using the overloaded << operator.
+    // 2. Displaying student data using overloaded << operator
+    std::cout << s1 << std::endl;
+    std::cout << s2 << std::endl;
 
-Combining students using the overloaded + operator.
+    std::cout << "\nActive students after s1 and s2 creation: " << Student::getActiveStudents() << "\n" << std::endl;
 
-Bonus (Optional Enhancements):
+    // 3. Copying students using the copy constructor
+    Student s3 = s2; // Calls Copy Constructor
+    s3.setRollNumber(103); // Change s3's roll number to prove it's a separate object
+    s3.setName("Charlie (Copy of Bob)");
+    std::cout << "--- Copied Student s3 (using Copy Constructor) ---" << std::endl;
+    std::cout << s3 << std::endl;
 
-Add a private static data member to keep track of how many Student objects are currently active.
+    // Check for deep copy: change s2's grades, s3's should remain unchanged
+    float g2_new[] = {99.0f};
+    s2.setGrades(g2_new, 1);
+    std::cout << "\n--- Grades changed for s2, checking s3 (deep copy check) ---" << std::endl;
+    std::cout << s2 << std::endl;
+    std::cout << s3 << std::endl;
 
-Add a method to calculate the student’s average grade.
-*/
+
+    // 4. Copying students using the assignment operator
+    Student s4; // Default constructor
+    s4 = s1;    // Calls Copy Assignment Operator (operator=)
+    s4.setName("Diana (Assignment of Alice)");
+    s4.setRollNumber(104);
+    std::cout << "\n--- Copied Student s4 (using Assignment Operator) ---" << std::endl;
+    std::cout << s4 << std::endl;
+
+
+    // 5. Combining students using the overloaded + operator
+    Student s_combined = s1 + s2; // Calls operator+
+    s_combined.setRollNumber(200);
+    s_combined.setName("Combined: Alice & Bob");
+    std::cout << "\n--- Combined Student (using operator+) ---" << std::endl;
+    std::cout << s_combined << std::endl;
+    
+    std::cout << "\nFinal active students before exiting main: " << Student::getActiveStudents() << std::endl;
+
+    // All destructors are called automatically when main() exits, cleaning up memory.
+    return 0;
+}

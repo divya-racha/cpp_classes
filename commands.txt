@@ -1,0 +1,38 @@
+1.Whenever you make a change in you machine. check what files changed
+
+git status -> all the red ones are changed files
+
+2. check which branch are you ones
+
+git branch
+
+3. To change to an existing 
+
+git checkout branch_name
+
+4. If you want to create a new branch
+
+git checkout -b branch_name
+
+5. If you want to commit with a new message
+
+git commit -m "new message" 
+
+6. If you dont want to add a new message just want to append the changes to previous
+
+git commit --amend
+
+6. Push to github
+
+git push origin branch_name -f(force). * but careful when you are keeping -f
+
+
+
+Linux commands
+ls -> list files
+mkdir directory_name -> make directory
+cd directory_name -> change directory
+pwd -> present working directory
+rmdir directory_name -> delete directory
+rm file_name -> remove file
+rm -rf directory_name ->  -r stands recursive -f stands for force
